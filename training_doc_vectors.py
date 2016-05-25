@@ -3,8 +3,8 @@
 from gensim.models.doc2vec import TaggedDocument, Doc2Vec
 import re
 
-filename= "queries_filtered_sample_100k.txt"
-#filename= "queries_filtered_sample.txt"
+# filename= "queries_filtered_sample_100k.txt"
+filename= "queries_filtered_sample.txt"
 sentences = []
 
 print "Caching documents to a list in memory."
@@ -14,10 +14,10 @@ for uid, line in enumerate(open(filename)):
 _alpha, _min_alpha, _passes = (0.045, 0.001, 25)
 alpha_delta = (_alpha - _min_alpha) / _passes
 _num_worker_cores = 35
-
+_window_size = 3
 
 print "Initializing Model ... "
-model = Doc2Vec(alpha=_alpha, min_alpha=_min_alpha, workers=_num_worker_cores)
+model = Doc2Vec(alpha=_alpha, min_alpha=_min_alpha, window=_window_size, workers=_num_worker_cores)
 print "Model Initialized. Now building vocabulary ... "
 model.build_vocab(sentences)
 print "Vocabulary building complete."
