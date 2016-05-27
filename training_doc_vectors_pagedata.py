@@ -54,10 +54,10 @@ class LabeledTaggedDocument(object):
             urlid = json.loads(tokens[0])
             data = json.loads(tokens[1])
             if not len(data['top_n_q']) == 0 and (not data['title'] == "") and (not data['desc'] == ""):
-                i += 1
                 if i == NUM_TRAINING_DOCS:
                     break
                 doc = ' '.join(data['top_n_q']) + " " + data['title'] + " " + data['desc']
+                i += 1
                 yield TaggedDocument(doc.split(), [urlid])
 
 if run_training:
