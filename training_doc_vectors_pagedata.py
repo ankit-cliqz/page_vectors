@@ -36,8 +36,9 @@ docvecs_process_input_file = "docvecs_input.txt"
 docvecs_process_input_keyvi_index_file = "docvecs_urlid_url.kv"
 doc2vec_trained_model = 'pages_with_spaces.doc2vec'
 
+# Runner Flags
 compile_keyvi_index = True  # Set this to True if you wish to recompile keyvi index for the input data.
-
+run_training = True        # Set this to True, to run Docevec training and save model.
 
 class LabeledTaggedDocument(object):
     """ This is a TaggedDocument iterator class for streaming the data directly from a file on disk
@@ -59,37 +60,37 @@ class LabeledTaggedDocument(object):
                 doc = ' '.join(data['top_n_q']) + " " + data['title'] + " " + data['desc']
                 yield TaggedDocument(doc.split(), [urlid])
 
+if run_training:
+    docs_it = LabeledTaggedDocument(training_data_file)
 
-docs_it = LabeledTaggedDocument(training_data_file)
+    _alpha, _min_alpha, _passes = (0.020, 0.001, 20)
+    alpha_delta = (_alpha - _min_alpha) / _passes
+    _num_worker_cores = 35
+    _window_size = 8
+    _vec_dim = 100
+    print "\nInitializing Model ... "
+    model = Doc2Vec(alpha=_alpha, min_alpha=_min_alpha, window=_window_size, workers=_num_worker_cores, size=_vec_dim)
 
-_alpha, _min_alpha, _passes = (0.020, 0.001, 20)
-alpha_delta = (_alpha - _min_alpha) / _passes
-_num_worker_cores = 35
-_window_size = 8
-_vec_dim = 100
-print "Initializing Model ... "
-model = Doc2Vec(alpha=_alpha, min_alpha=_min_alpha, window=_window_size, workers=_num_worker_cores, size=_vec_dim)
+    print "Model Initialized. Now building vocabulary ... "
+    model.build_vocab(docs_it)
+    print "Vocabulary building complete."
 
-print "Model Initialized. Now building vocabulary ... "
-model.build_vocab(docs_it)
-print "Vocabulary building complete."
+    print "\nStarting to train a doc2vec model..... "
+    for epoch in range(_passes):
+        print "EPOCH : {}, Alpha:{} ".format(epoch + 1, model.alpha)
+        model.train(docs_it)
+        model.alpha -= alpha_delta
+        model.min_alpha = model.alpha
+        print "Finished training epoch: {}".format(epoch + 1)
 
-print "Starting to train a doc2vec model..... "
-for epoch in range(_passes):
-    print "EPOCH : {}, Alpha:{} ".format(epoch + 1, model.alpha)
-    model.train(docs_it)
-    model.alpha -= alpha_delta
-    model.min_alpha = model.alpha
-    print "Finished training epoch: {}".format(epoch + 1)
-
-print "Saving Trained Model on Disk ... "
-# store the model to mmap-able files
-model.save("{}\t{}".format(output_data_path, doc2vec_trained_model))
-print "Model Saved Successfully!"
+    print "\nSaving Trained Model on Disk ... "
+    # store the model to mmap-able files
+    model.save("{}/{}".format(output_data_path, doc2vec_trained_model))
+    print "Model Saved Successfully!"
 
 if compile_keyvi_index:
-    print "Saving the data in a separate file and building keyvi index ....."
-    fw = open("{}\t{}".format(output_data_path, docvecs_process_input_file), "w")
+    print "\nSaving the data in a separate file and building keyvi index ....."
+    fw = open("{}/{}".format(output_data_path, docvecs_process_input_file), "w")
     keyvi_index_compiler = pykeyvi.JsonDictionaryCompiler()
     with open(training_data_file) as fo:
         i = 0
@@ -101,15 +102,16 @@ if compile_keyvi_index:
                 i += 1
                 if i == NUM_TRAINING_DOCS:
                     break
-                fw.write("{}\t{}\t{}\n".format(urlid, convert_line_unicode(data['url']), ','.join(data['top_n_q'])))
+                fw.write("{}\t{}\t{}\n".format(urlid, data['url'].encode("utf-8"), ','.join(data['top_n_q']).encode("utf-8")))
+                #fw.write("{}\t{}\n".format(urlid, data['url'].encode("utf-8")))
                 try:
-                    keyvi_index_compiler.Add(urlid, json.dumps(data['url']))
+                    keyvi_index_compiler.Add(str(urlid), json.dumps(data['url']))
 
                 except Exception as e:
                     print "Exception for urlid: {} : {}".format(urlid, e)
     fw.close()
     print "Finished: Saving the data in a seperate file."
-    print "Compiling Keyvi Index < url:id - url for training data >... "
+    print "\nCompiling Keyvi Index < url:id - url for training data >... "
     keyvi_index_compiler.Compile()
     print "Finished Compileing Keyvi. Now writing keyvi index to file... "
     keyvi_index_compiler.WriteToFile("{}/{}".format(output_data_path, docvecs_process_input_keyvi_index_file))
@@ -117,4 +119,4 @@ if compile_keyvi_index:
 
 
 
-print "All operations Finished!"
+print "\nAll operations Finished! :) :) :)"

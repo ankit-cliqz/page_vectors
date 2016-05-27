@@ -12,7 +12,7 @@ keyvi_dict=pykeyvi.Dictionary("{}/{}".format(output_data_path, docvecs_process_i
 print "Finished Loading key-vi Dictionary."
 
 print "Loading Doc2Vec Model ... "
-model = Doc2Vec.load("{}\t{}".format(output_data_path, doc2vec_trained_model))
+model = Doc2Vec.load("{}/{}".format(output_data_path, doc2vec_trained_model))
 print "Model Loaded Successfully!"
 
 
@@ -27,8 +27,8 @@ def get_similar_urls(sample_query, nearest_num):
         print "{}\t{}\t{}".format(url_id, url, distance)
 
 def main():
-    print "\nSimilar Queries - Annoy Retrieval Interface [All Top Queries]"
-    print "--------------------------------------------------------------"
+    print "\nSimilar URLS for Queries - Doc2Vec Retrieval Interface [All URL's]"
+    print "---------------------------------------------------------------------------"
     flag = "True"
     while (flag == "True"):
         testquery = raw_input("Enter Query: ")
