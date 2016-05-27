@@ -1,32 +1,50 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-from gensim.models.doc2vec import TaggedDocument, Doc2Vec
-filename= "topq-title-desc.txt"
-import ujson as json
+from gensim.models.doc2vec import Doc2Vec
+import pykeyvi
 
-sentence_dict= {}
-for uid, line in enumerate(open(filename)):
-    tokens = line.split("\t")
-    urlid = json.loads(tokens[0])
-    data = json.loads(tokens[1])
-    doc = ' '.join(data['top_n_q']) + " " + data['title']
-    sentence_dict[urlid] = doc.strip()
+docvecs_process_input_keyvi_index_file = "docvecs_urlid_url.kv"
+output_data_path = "/raid/ankit/doc2vec/out_s_p_test"
+doc2vec_trained_model = 'pages_with_spaces.doc2vec'
 
+print "Loading keyvi dictionaries ..."
+keyvi_dict=pykeyvi.Dictionary("{}/{}".format(output_data_path, docvecs_process_input_keyvi_index_file))
+print "Finished Loading key-vi Dictionary."
 
-print "Loading Doc2Vec Model"
-model = Doc2Vec.load('pages.doc2vec')
+print "Loading Doc2Vec Model ... "
+model = Doc2Vec.load("{}\t{}".format(output_data_path, doc2vec_trained_model))
 print "Model Loaded Successfully!"
 
-sample_query = "giacometti wikipedia italiano"
-print "Sample Query: {}".format(sample_query)
 
-tokens = sample_query.lower().split()
-dv = model.infer_vector(tokens)     # note: may want to use many more steps than default
+def get_similar_urls(sample_query, nearest_num):
+    tokens = sample_query.lower().split()
+    dv = model.infer_vector(tokens)     # note: may want to use many more steps than default
+    sims = model.docvecs.most_similar(positive=[dv],  topn=nearest_num)
+    for url_id, distance in sims:
+        url = ""
+        for m in keyvi_dict.Get(str(url_id)):
+            url = m.GetValueAsString()
+        print "{}\t{}\t{}".format(url_id, url, distance)
 
-#print "Document Vector:"
-#print dv
+def main():
+    print "\nSimilar Queries - Annoy Retrieval Interface [All Top Queries]"
+    print "--------------------------------------------------------------"
+    flag = "True"
+    while (flag == "True"):
+        testquery = raw_input("Enter Query: ")
+        nearest_num = raw_input("Number of similar queries: ")
+        if nearest_num == 0 or nearest_num == "":
+            nearest_num = 10
+        nearest_num = int(nearest_num)
+        if not testquery.strip() =="":
+            # Return and Print the Top 10 nearest Queries to the Original Query
+            print "\nCandidate Nearest Queries [TOP "+str(nearest_num)+"]: "
+            get_similar_urls(testquery, nearest_num)
 
-sims = model.docvecs.most_similar(positive=[dv])
-print "\nList of similar Documents:>> "
-for x, y in sims:
-    print (x, sentence_dict[x], y)
+            user_input = raw_input("\nDo you wish to continue again? (Type 'no' to quit): ")
+            if user_input == "no":
+                print "\nGoodbye!"
+                break
+            else:
+                print "\n"
+                continue
