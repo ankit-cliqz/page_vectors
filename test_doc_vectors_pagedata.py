@@ -4,8 +4,9 @@ from gensim.models.doc2vec import Doc2Vec
 import pykeyvi
 
 docvecs_process_input_keyvi_index_file = "docvecs_urlid_url.kv"
-output_data_path = "/raid/ankit/doc2vec/out_s_p_test"
+output_data_path = "/raid/ankit/doc2vec/out_s_p_1M"
 doc2vec_trained_model = 'pages_with_spaces.doc2vec'
+_alpha, _min_alpha, _passes = (0.020, 0.001, 20)
 
 print "Loading keyvi dictionaries ..."
 keyvi_dict=pykeyvi.Dictionary("{}/{}".format(output_data_path, docvecs_process_input_keyvi_index_file))
@@ -18,7 +19,7 @@ print "Model Loaded Successfully!"
 
 def get_similar_urls(sample_query, nearest_num):
     tokens = sample_query.lower().split()
-    dv = model.infer_vector(tokens)     # note: may want to use many more steps than default
+    dv = model.infer_vector(tokens, alpha=_alpha, min_alpha=_min_alpha, steps=_passes)     # note: may want to use many more steps than default
     sims = model.docvecs.most_similar(positive=[dv],  topn=nearest_num)
     for url_id, distance in sims:
         url = ""
@@ -48,3 +49,6 @@ def main():
             else:
                 print "\n"
                 continue
+
+if __name__=="__main__":
+    main()

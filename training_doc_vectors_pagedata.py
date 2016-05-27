@@ -26,11 +26,11 @@ def convert_line_unicode(line):
         pass
     return line
 
-# NUM_TRAINING_DOCS = 1 * 100000000 # Training  -- Final Mode
-NUM_TRAINING_DOCS = 20 * 1000  # Training --  Testing Mode
+NUM_TRAINING_DOCS = 2 * 100000000 # Training  -- Final Mode  (200M)
+# NUM_TRAINING_DOCS = 20 * 1000  # Training --  Testing Mode  (20K)
 
 training_data_file = "/raid/ankit/doc2vec/data/splits/snippet_and_pagemodel"
-output_data_path = "/raid/ankit/doc2vec/out_s_p_test"
+output_data_path = "/raid/ankit/doc2vec/out_s_p_200M"
 create_dir(output_data_path)
 docvecs_process_input_file = "docvecs_input.txt"
 docvecs_process_input_keyvi_index_file = "docvecs_urlid_url.kv"
