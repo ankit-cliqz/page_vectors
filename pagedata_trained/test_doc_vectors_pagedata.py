@@ -39,7 +39,7 @@ def main():
         nearest_num = int(nearest_num)
         if not testquery.strip() =="":
             # Return and Print the Top 10 nearest Queries to the Original Query
-            print "\nCandidate Nearest Queries [TOP "+str(nearest_num)+"]: "
+            print "\nCandidate Nearest URLS [TOP "+str(nearest_num)+"]: "
             get_similar_urls(testquery, nearest_num)
 
             user_input = raw_input("\nDo you wish to continue again? (Type 'no' to quit): ")
